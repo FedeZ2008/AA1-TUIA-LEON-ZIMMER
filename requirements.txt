@@ -8,3 +8,6 @@ imbalanced-learn
 optuna
 pycaret
 shap
+geopandas
+contextily
+tensorflow==2.10.0
