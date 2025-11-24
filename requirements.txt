@@ -1,5 +1,4 @@
 pandas
-numpy
 seaborn
 matplotlib
 plotly
@@ -11,3 +10,5 @@ shap
 geopandas
 contextily
 tensorflow==2.10.0
+numpy
+optuna-integration
