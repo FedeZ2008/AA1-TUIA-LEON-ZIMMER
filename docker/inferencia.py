@@ -8,6 +8,34 @@ warnings.simplefilter('ignore')
 import logging
 from sys import stdout
 
+# --- CONFIGURACIÓN ---
+# Nombres de los archivos que deben estar en la misma carpeta
+MODEL_PATH = 'pipeline.joblib'
+KMEANS_PATH = 'kmeans_region.joblib'
+MEDIAN_MAP_PATH = 'climatologia_medianas.joblib'
+MODE_MAP_PATH = 'mapas_modas.joblib'
+
+# Definición de variables (Las mismas que usaste en train)
+VARIABLES_NUMERICAS = [
+    'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
+    'WindGustSpeed', 'WindSpeed9am', 'WindSpeed3pm',
+    'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
+    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm'
+]
+
+CAT_VARS = ['RainToday', 'WindGustDir', 'WindDir9am', 'WindDir3pm']
+
+
+def cargar_artefactos():
+    """Carga todos los modelos y diccionarios necesarios."""
+    required_files = [MODEL_PATH, KMEANS_PATH, MEDIAN_MAP_PATH, MODE_MAP_PATH]
+    # Cargar archivos
+    pipeline = joblib.load(MODEL_PATH)
+    kmeans = joblib.load(KMEANS_PATH)
+    mapas_medianas = joblib.load(MEDIAN_MAP_PATH)
+    mapas_modas = joblib.load(MODE_MAP_PATH)
+    
+    return pipeline, kmeans, mapas_medianas, mapas_modas
 
 
 
@@ -35,7 +63,62 @@ def limpieza(df):
             return 'Spring'
     df['Season'] = df['Date'].apply(get_season)
 
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Month'] = df['Date'].dt.month
+    df['Day'] = df['Date'].dt.day
+    # 3. IMPUTACIÓN NUMÉRICA (Por Region, Mes, Dia)
+    for var in VARIABLES_NUMERICAS:
+        if var in df.columns and df[var].isnull().any():
+            # Recuperamos el mapa para esta variable
+            median_map = mapas_medianas.get(var)
+            
+            if median_map is not None:
+                mask = df[var].isnull()
+                # Buscamos en el mapa usando el índice múltiple
+                valores_imputados = df.loc[mask].set_index(['Region', 'Month', 'Day']).index.map(median_map)
+                
+                # Rellenamos
+                df.loc[mask, var] = valores_imputados
+              
+
+    # 4. IMPUTACIÓN CATEGÓRICA (Por Region, Mes, Dia)
+    for var in CAT_VARS:
+        if var in df.columns and df[var].isnull().any():
+            mode_map = mapas_modas.get(var)
+            
+            if mode_map is not None:
+                mask = df[var].isnull()
+                valores_imputados = df.loc[mask].set_index(['Region', 'Month', 'Day']).index.map(mode_map)
+                
+                df.loc[mask, var] = valores_imputados
+    df = df.drop(columns=['Day', 'Month','Location','latitude', 'longitude','Date'])            
     
+    # Función para convertir direcciones de viento a ángulos en radianes
+    def wind_dir_to_rad(wind_dir):
+    
+        mapping = {
+            'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+            'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+            'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+            'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+        }
+        return wind_dir.map(mapping).astype(float) * np.pi / 180
+
+    for col in ['WindGustDir', 'WindDir9am', 'WindDir3pm']:
+        for df_ in [df]:
+            rad = wind_dir_to_rad(df_[col])
+            df_[f'{col}_sin'] = np.sin(rad)
+            df_[f'{col}_cos'] = np.cos(rad)
+        df.drop(columns=[col], inplace=True)
+        
+
+    # Creamos variables dummies
+    columnas_dummies = ['RainToday','Season','Region']
+    df = pd.get_dummies(df, columns=columnas_dummies, prefix=columnas_dummies, drop_first=True, dtype=int)
+
+    df.rename(columns={
+        'RainToday_Yes': 'RainToday',
+    }, inplace=True)
 
     return df
 
