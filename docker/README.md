@@ -16,7 +16,7 @@ Este directorio contiene los archivos necesarios para construir una imagen de Do
 
 ---
 
-## 🚀 Instrucciones de Uso
+## Instrucciones de Uso
 
 ### 1. Prerrequisitos
 Tener **Docker** instalado y ejecutándose en su máquina.
@@ -24,8 +24,9 @@ Tener **Docker** instalado y ejecutándose en su máquina.
 ### 2. Construir la Imagen (Build)
 Abra una terminal en esta carpeta (`docker/`) y ejecute:
 
-
 docker build -t predictor-lluvia .
 
+### 3. Correr imagen
+En la misma terminal ejecute el siguiente comando
 
 docker run --rm -v ${PWD}:/app predictor-lluvia python inference.py datos_prueba.csv

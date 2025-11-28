@@ -35,6 +35,7 @@ COLUMNAS = ['MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
        'WindDir9am_cos', 'WindDir3pm_sin', 'WindDir3pm_cos', 'RainToday',
         'Season_Spring', 'Season_Summer', 'Season_Winter']
 
+# Carga de modelos y artefactos
 pipeline = tf.keras.models.load_model(MODEL_PATH)
 kmeans = joblib.load(KMEANS_PATH)
 mapas_medianas = joblib.load(MEDIAN_MAP_PATH)
@@ -42,7 +43,7 @@ mapas_modas = joblib.load(MODE_MAP_PATH)
 scaler = joblib.load(SCALER_PATH)
 df_coords = pd.read_csv(COORDS_CSV)
     
-
+# Definición de clase y funciones auxiliares
 def f1_score(y_true, y_pred):
     return 0.0
 
@@ -77,9 +78,6 @@ class NeuralNetworkBinary:
         return predictions
 
       
-
-      
-
 def get_season(dt):
     """asigna estaciones"""
     month = dt.month
@@ -103,7 +101,7 @@ def wind_dir_to_rad(wind_dir):
     }
     return wind_dir.map(mapping).astype(float) * np.pi / 180
 
-
+# Función de limpieza y preprocesamiento
 def limpieza(df, kmeans, mapas_medianas, mapas_modas, scaler, df_coords):
     
     #generacion de latitudes y longitudes
@@ -169,6 +167,7 @@ def limpieza(df, kmeans, mapas_medianas, mapas_modas, scaler, df_coords):
    
     return df
 
+# Función principal de Inference
 def ejecutar_inference(datos):
     try:
                
@@ -181,7 +180,7 @@ def ejecutar_inference(datos):
     except Exception as e:
         return f"Error: {e}"
 
-
+# Ejecución
 if __name__ == "__main__":
     # Verificamos si el usuario pasó un archivo como argumento
     if len(sys.argv) < 2:
@@ -189,20 +188,15 @@ if __name__ == "__main__":
         print("Uso: python inference.py <archivo_datos.csv>")
         sys.exit(1)
 
-    # 1. Obtener la ruta del archivo desde la consola
     input_file = sys.argv[1]
     
     print(f"--- Leyendo archivo: {input_file} ---")
 
     try:
-        # 2. Leer el CSV Input
         df_entrada = pd.read_csv(input_file)
         
-        # 3. Ejecutar Inference
         predicciones = ejecutar_inference(df_entrada)
         
-        # 4. Guardar o Mostrar Resultados
-        # Opción A: Agregar la predicción al CSV original y guardar uno nuevo
         df_salida = df_entrada.copy()
         df_salida['Posibilidad de lluvia'] = predicciones
         df_salida['RainTomorrow'] = np.where(df_salida['Posibilidad de lluvia'] >= 0.5, 1, 0)
@@ -211,7 +205,6 @@ if __name__ == "__main__":
         
         print(f"Éxito. Predicciones guardadas en '{output_file}'")
         
-        # Opcional: Mostrar las primeras filas en consola
         print(df_salida[['Date', 'Location','RainTomorrow', 'Posibilidad de lluvia',]].head())
 
     except FileNotFoundError:
