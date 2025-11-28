@@ -28,4 +28,4 @@ Abra una terminal en esta carpeta (`docker/`) y ejecute:
 docker build -t predictor-lluvia .
 
 
-docker run --rm -v %cd%:/app predictor-lluvia python inferencia.py datos_prueba.csv
+docker run --rm -v ${PWD}:/app predictor-lluvia python inference.py datos_prueba.csv

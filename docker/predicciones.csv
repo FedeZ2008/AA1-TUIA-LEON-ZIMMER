@@ -1,0 +1,2 @@
+Date,Location,MinTemp,MaxTemp,Rainfall,Evaporation,Sunshine,WindGustDir,WindGustSpeed,WindDir9am,WindDir3pm,WindSpeed9am,WindSpeed3pm,Humidity9am,Humidity3pm,Pressure9am,Pressure3pm,Cloud9am,Cloud3pm,Temp9am,Temp3pm,RainToday,Posibilidad de lluvia,RainTomorrow
+2015-09-17,Portland,6.5,13.2,4.2,,2.1,WSW,37,SW,W,20,24,90,79,1025.2,1026.1,6,8,9.7,12.5,Yes,0.8970746,1
