@@ -9,6 +9,6 @@ pycaret
 shap
 geopandas
 contextily
-tensorflow==2.10.0
+tensorflow==2.20.0
 numpy
-optuna-integration
+joblib
